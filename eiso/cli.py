@@ -18,15 +18,23 @@ def cmd_remember(args):
 
 def cmd_recall(args):
     mem = MemoryEngine(args.db_path)
-    for r in mem.recall(args.query, category=args.category, limit=args.limit):
-        pin = 'P' if r['pinned'] else ' '
-        print(f"[{pin}] [{r['category']:12s} | imp={r['importance']}] {r['title']}: {r['content'][:60]}")
+    results = list(mem.recall(args.query, category=args.category, limit=args.limit))
+    if args.json:
+        print(json.dumps(results, indent=2, ensure_ascii=False, default=str))
+    else:
+        for r in results:
+            pin = 'P' if r['pinned'] else ' '
+            print(f"[{pin}] [{r['category']:12s} | imp={r['importance']}] {r['title']}: {r['content'][:60]}")
 
 
 def cmd_search(args):
     mem = MemoryEngine(args.db_path)
-    for r in mem.semantic_search(args.query, top_n=args.top):
-        print(f"[{r['category']:12s} | imp={r['importance']} | sim={r['semantic_score']:.3f}] {r['title']}")
+    results = mem.semantic_search(args.query, top_n=args.top)
+    if args.json:
+        print(json.dumps(results, indent=2, ensure_ascii=False, default=str))
+    else:
+        for r in results:
+            print(f"[{r['category']:12s} | imp={r['importance']} | sim={r['semantic_score']:.3f}] {r['title']}")
 
 
 def cmd_decay(args):
@@ -48,7 +56,7 @@ def cmd_stats(args):
 
 def cmd_export(args):
     mem = MemoryEngine(args.db_path)
-    all_memories = mem.recall('', limit=10000)
+    all_memories = mem.recall('', category=args.category, limit=args.limit)
     print(json.dumps(all_memories, indent=2, ensure_ascii=False, default=str))
 
 
@@ -65,8 +73,8 @@ def main():
     p.add_argument('category')
     p.add_argument('title')
     p.add_argument('content')
-    p.add_argument('keywords', nargs='?', default='')
-    p.add_argument('importance', nargs='?', type=int, default=5)
+    p.add_argument('--keywords', default='')
+    p.add_argument('--importance', type=int, default=5)
     p.add_argument('--pinned', action='store_true')
     p.set_defaults(func=cmd_remember)
 
@@ -75,12 +83,14 @@ def main():
     p.add_argument('query')
     p.add_argument('--category')
     p.add_argument('--limit', type=int, default=10)
+    p.add_argument('--json', action='store_true')
     p.set_defaults(func=cmd_recall)
 
     p = sub.add_parser('search')
     p.add_argument('db_path')
     p.add_argument('query')
     p.add_argument('--top', type=int, default=5)
+    p.add_argument('--json', action='store_true')
     p.set_defaults(func=cmd_search)
 
     p = sub.add_parser('decay')
@@ -98,6 +108,8 @@ def main():
 
     p = sub.add_parser('export')
     p.add_argument('db_path')
+    p.add_argument('--category')
+    p.add_argument('--limit', type=int, default=10000)
     p.set_defaults(func=cmd_export)
 
     args = parser.parse_args()

@@ -84,3 +84,39 @@ def test_update_memory(mem):
     mem.update_memory(mid, importance=8)
     results = mem.recall("Update")
     assert results[0]['importance'] == 8
+
+
+def test_semantic_search_empty_db(mem):
+    results = mem.semantic_search("anything")
+    assert results == []
+
+
+def test_recall_by_id(mem):
+    mid = mem.remember("test", "ByID", "Test recall_by_id", "", importance=5)
+    m = mem.recall_by_id(mid)
+    assert m is not None
+    assert m['title'] == 'ByID'
+    assert mem.recall_by_id(99999) is None
+
+
+def test_remember_empty_validation(mem):
+    import pytest
+    with pytest.raises(ValueError):
+        mem.remember("test", "", "content")
+    with pytest.raises(ValueError):
+        mem.remember("test", "title", "")
+
+
+def test_decay_empty_db(mem):
+    deleted = mem.decay_memories()
+    assert deleted == 0
+
+
+def test_consolidate_empty_db(mem):
+    assert mem.consolidate() == 0
+
+
+def test_update_invalid_field_warning(mem, capsys):
+    mid = mem.remember("test", "Warn", "Test", "", importance=5)
+    mem.update_memory(mid, contentt="typo")
+    # Just verify no crash — warning goes to stderr

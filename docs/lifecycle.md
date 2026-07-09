@@ -13,7 +13,7 @@ Every memory in Eiso goes through a defined lifecycle — from extraction to eve
                               |
                               v
                         +-----+-----+
-                        |   STORE   |  Written to SQLite + FTS5 index
+                        |   STORE   |  Written to SQLite with keyword search index
                         +-----+-----+
                               |
                               v
@@ -64,7 +64,7 @@ Every memory in Eiso goes through a defined lifecycle — from extraction to eve
 ## Phase 2: STORE / 存储
 
 **What happens:** The memory is written to the SQLite database with:
-- Full-text indexing via FTS5 (for keyword search)
+- Full-text indexing via SQLite LIKE search (FTS5 auto-created by schema.py)
 - TF-IDF vector embedding (for semantic search)
 - Metadata: category, tags, importance, pinned status, timestamps
 
@@ -84,9 +84,8 @@ CREATE TABLE memories (
     last_accessed TEXT
 );
 
-CREATE VIRTUAL TABLE memories_fts USING fts5(
-    title, content, tags, content='memories', content_rowid='id'
-);
+-- FTS5 virtual table is auto-created by schema.py when the database is initialized.
+-- The engine also supports fallback to SQLite LIKE search.
 ```
 
 **Configuration:**
@@ -143,7 +142,7 @@ Where `ticks` = number of days beyond `decay_days`.
 
 ## Phase 6: FORGET / 遗忘
 
-**What happens:** The memory row is deleted from both the `memories` table and the `memories_fts` index. Once forgotten, the data is gone permanently — there is no trash or undo.
+**What happens:** The memory row is deleted from the `memories` table. Once forgotten, the data is gone permanently — there is no trash or undo.
 
 **Explicit forget:**
 ```python

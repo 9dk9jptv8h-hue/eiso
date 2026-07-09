@@ -26,7 +26,7 @@ A frank comparison of Eiso against the major memory solutions in the AI ecosyste
 | **Size** | < 500 KB |
 | **Dependencies** | Zero (stdlib only + optional jieba for Chinese) |
 | **Storage** | SQLite (single file) |
-| **Search** | FTS5 keyword + TF-IDF semantic |
+| **Search** | SQLite LIKE keyword + TF-IDF semantic |
 | **Lifecycle** | Full (extract -> store -> age -> decay -> consolidate -> forget) |
 | **Vector DB** | None (TF-IDF in-process) |
 | **API Keys** | None |
@@ -184,7 +184,7 @@ A frank comparison of Eiso against the major memory solutions in the AI ecosyste
 | Decay & forgetting | Yes | No | No | No | No |
 | Pinned protection | Yes | No | No | No | No |
 | Chinese tokenization | Yes | No | No | No | No |
-| FTS5 keyword search | Yes | No | No | No | No |
+| SQLite LIKE keyword search | Yes | No | No | No | No |
 | Semantic search | TF-IDF | Dense | Dense | Depends | Dense |
 | Deduplication | Yes | No | No | No | No |
 | Auto-extraction | Yes | No | No | No | Yes |

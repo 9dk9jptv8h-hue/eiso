@@ -14,6 +14,7 @@ class MemoryEngine:
         self.db_path = db_path
         self.max_features = max_features
         self._vectorizer = None
+        self._emb_cache = None
         self._init_connection()
 
     def _init_connection(self):
@@ -34,6 +35,10 @@ class MemoryEngine:
     # --- CRUD ---
     def remember(self, category, title, content, keywords='', importance=5, pinned=False):
         """Store a memory. Returns the new memory ID."""
+        if not title or not title.strip():
+            raise ValueError("title must not be empty")
+        if not content or not content.strip():
+            raise ValueError("content must not be empty")
         conn = self._get_db()
         cur = conn.execute(
             'INSERT INTO memories (category, title, content, keywords, importance, pinned) VALUES (?,?,?,?,?,?)',
@@ -41,10 +46,11 @@ class MemoryEngine:
         new_id = cur.lastrowid
         conn.commit()
         self.embed_memory(new_id, conn)
+        self._emb_cache = None
         conn.close()
         return new_id
 
-    def recall(self, query='', category=None, limit=10, min_importance=1):
+    def recall(self, query='', category=None, limit=10, min_importance=1, read_only=False):
         """Search memories by keyword LIKE match with scoring."""
         conn = self._get_db()
         conditions = ['decay_score > 0.05']
@@ -64,12 +70,20 @@ class MemoryEngine:
             FROM memories WHERE {where}
             ORDER BY pinned DESC, score DESC, created_at DESC LIMIT ?
         ''', params + [limit]).fetchall()
-        for row in rows:
-            conn.execute('UPDATE memories SET last_accessed=?, access_count=access_count+1 WHERE id=?',
-                        (datetime.now().isoformat(), row['id']))
+        if not read_only:
+            for row in rows:
+                conn.execute('UPDATE memories SET last_accessed=?, access_count=access_count+1 WHERE id=?',
+                            (datetime.now().isoformat(), row['id']))
         conn.commit()
         conn.close()
         return [dict(r) for r in rows]
+
+    def recall_by_id(self, memory_id):
+        """Fetch a single memory by its ID. Returns dict or None."""
+        conn = self._get_db()
+        row = conn.execute('SELECT * FROM memories WHERE id=?', (memory_id,)).fetchone()
+        conn.close()
+        return dict(row) if row else None
 
     def forget(self, memory_id):
         """Delete an unpinned memory."""
@@ -89,6 +103,10 @@ class MemoryEngine:
         conn.execute(f'UPDATE memories SET {sets} WHERE id=?', list(filtered.values()) + [memory_id])
         conn.commit()
         conn.close()
+        unknown = set(kwargs.keys()) - allowed
+        if unknown:
+            import warnings
+            warnings.warn(f"Unknown fields ignored: {unknown}")
 
     # --- VECTOR ---
     def _fit_vectorizer(self):
@@ -98,6 +116,7 @@ class MemoryEngine:
         documents = [f"{r['title']} {r['content']}" for r in rows]
         self._vectorizer = TfidfVectorizer(max_features=self.max_features)
         self._vectorizer.fit(documents)
+        self._emb_cache = np.array([self._vectorizer.transform_one(d) for d in documents])
 
     def embed_memory(self, memory_id, conn):
         row = conn.execute('SELECT title, content FROM memories WHERE id=?', (memory_id,)).fetchone()
@@ -114,6 +133,7 @@ class MemoryEngine:
             'INSERT OR REPLACE INTO memory_embeddings (memory_id, embedding, model_version, generated_at) VALUES (?,?,?,datetime("now","localtime"))',
             (memory_id, blob, 'tfidf-v1'))
         conn.commit()
+        self._emb_cache = None
         return True
 
     def embed_all_memories(self):

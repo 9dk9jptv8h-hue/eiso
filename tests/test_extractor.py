@@ -60,3 +60,29 @@ def test_is_novel():
         os.remove(db)
     except:
         pass
+
+
+def test_extract_nonexistent_file():
+    db = os.path.join(tempfile.gettempdir(), "test_nonexist.db")
+    mem = MemoryEngine(db)
+    saved = extract_from_history("nonexistent_file_xyz.jsonl", mem)
+    assert saved == 0
+    try: os.remove(db)
+    except: pass
+
+
+def test_extract_unicode_emoji():
+    db = os.path.join(tempfile.gettempdir(), "test_unicode_emoji.db")
+    mem = MemoryEngine(db)
+    history = os.path.join(tempfile.gettempdir(), "test_unicode.jsonl")
+    msgs = ["用户发了一个表情😀测试", "混合日本語と中文 and English"]
+    with open(history, 'w', encoding='utf-8') as f:
+        for msg in msgs:
+            f.write(json.dumps({"display": msg}, ensure_ascii=False) + '\n')
+    saved = extract_from_history(history, mem)
+    assert saved >= 0
+    try:
+        os.remove(history)
+        os.remove(db)
+    except:
+        pass

@@ -23,6 +23,12 @@ SCHEMA_DDL = """
         FOREIGN KEY (memory_id) REFERENCES memories(id) ON DELETE CASCADE
     );
 
+    CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
+        title, content, keywords,
+        content='memories',
+        content_rowid='id'
+    );
+
     CREATE INDEX IF NOT EXISTS idx_memories_category ON memories(category);
     CREATE INDEX IF NOT EXISTS idx_memories_importance ON memories(importance DESC);
     CREATE INDEX IF NOT EXISTS idx_memories_decay ON memories(decay_score);

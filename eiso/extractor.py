@@ -1,6 +1,6 @@
 """Eiso Extractor — Automatic memory extraction from conversation history."""
 
-import json, os, re
+import json, os, re, sys
 from collections import Counter
 
 
@@ -90,9 +90,11 @@ def extract_from_history(history_file, engine, emotional_patterns=None, max_mess
         int: number of new memories saved
     """
     if not os.path.exists(history_file):
+        print(f"Warning: history file not found: {history_file}", file=sys.stderr)
         return 0
 
     raw_msgs = []
+    skipped = 0
     try:
         with open(history_file, encoding='utf-8', errors='ignore') as f:
             for line in f:
@@ -101,10 +103,13 @@ def extract_from_history(history_file, engine, emotional_patterns=None, max_mess
                     display = entry.get('display', '').strip()
                     if display:
                         raw_msgs.append(display)
-                except:
-                    pass
-    except:
+                except (json.JSONDecodeError, KeyError):
+                    skipped += 1
+    except (json.JSONDecodeError, KeyError):
         return 0
+
+    if skipped > 0:
+        print(f"Warning: skipped {skipped} unparseable lines in {history_file}", file=sys.stderr)
 
     recent = raw_msgs[-max_messages:]
     all_text = ' '.join(recent)

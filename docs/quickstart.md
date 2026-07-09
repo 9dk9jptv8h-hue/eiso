@@ -24,7 +24,7 @@ mem.remember(
     category="emotional",
     title="User loves sunsets",
     content="The user told me they watch the sunset every evening from their balcony.",
-    tags="sunset,evening,habit",
+    keywords="sunset,evening,habit",
     importance=7,
     pinned=True,
 )
@@ -41,7 +41,7 @@ for r in results:
 # Semantic search (TF-IDF vector similarity)
 results = mem.semantic_search("evening ritual")
 for r in results:
-    print(f"Score: {r['score']:.3f} | {r['title']}")
+    print(f"Score: {r['semantic_score']:.3f} | {r['title']}")
 ```
 
 ### That's it. / 就这么简单。
@@ -54,7 +54,7 @@ Your AI character now has persistent memory that survives restarts, survives com
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `max_features` | `500` | TF-IDF vocabulary size. Larger = more accurate semantic search, more memory. |
+| `max_features` | `256` | TF-IDF vocabulary size. Larger = more accurate semantic search, more memory. |
 | `decay_days` | `30` | Days before a memory begins decaying. Set to `0` to disable. |
 | `decay_rate` | `0.1` | How much importance is lost per decay tick. |
 | `forget_threshold` | `1.0` | Memories with importance below this after decay are eligible for deletion. |
@@ -103,7 +103,7 @@ class MyCharacterBot:
                 category="conversation",
                 title=f"User mentioned {self._extract_topic(user_input)}",
                 content=user_input,
-                tags=self._extract_tags(user_input),
+                keywords=self._extract_tags(user_input),
                 importance=self._rate_importance(user_input),
             )
 ```
@@ -158,20 +158,14 @@ print(stats)
 ## CLI Reference / 命令行参考
 
 ```bash
-# Check database health
-python -m eiso check my_memories.db
-
 # Show stats
 python -m eiso stats my_memories.db
-
-# Run decay + cleanup
-python -m eiso maintain my_memories.db --max 5000
 
 # Search from CLI
 python -m eiso search my_memories.db "sunset"
 
 # Export memories to JSON
-python -m eiso export my_memories.db --output memories.json
+python -m eiso export my_memories.db
 ```
 
 ---
