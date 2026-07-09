@@ -113,14 +113,55 @@ eiso export bot.db --category personal
 
 ## 怎么用？
 
-安装完后，**直接对 AI 说这段话**：
+装好 eiso 之后，**对你的 AI 说下面这段话，它就会自动用起来了**：
 
-> 你有记忆系统了，数据库在 bot.db。
-> 回复我之前，先运行 `eiso search bot.db "用户的问题" --json` 搜索相关记忆。
-> 我讲了重要的事，就运行 `eiso remember bot.db 分类 "标题" "内容" --importance 7` 存起来。
-> 对话结束运行 `eiso decay bot.db`。
+---
 
-就这样。AI 会自己调命令行完成一切。
+> 现在你有了一个记忆系统，命令是 `eiso`，数据存在 `bot.db`。
+>
+> **每次回复我之前**，先搜索一下之前有没有相关记忆：
+> ```
+> eiso search bot.db "这里写用户当前的问题" --json
+> ```
+> 把搜到的记忆当成背景信息，再回复我。
+>
+> **当我告诉你重要的事情时**，记住它：
+> ```
+> eiso remember bot.db 分类 "标题" "内容" --importance 7
+> ```
+> 分类随意写，比如 personal（个人信息）、preference（偏好）、project（项目）。
+> importance 越高越不容易被遗忘，范围 1-10。
+>
+> **这次对话结束时**，运行一次维护：
+> ```
+> eiso decay bot.db
+> ```
+
+---
+
+**之后每次开新对话**，只需要一句：「跟之前一样用 eiso 记忆系统，bot.db」就够了。
+
+### 实际效果演示
+
+```
+你说：我叫小明，喜欢 Python，讨厌 Java
+
+AI 自动执行：
+  eiso remember bot.db personal "小明喜欢Python讨厌Java" "小明喜欢Python讨厌Java" --importance 8
+AI 回复：记住了小明，Python派！
+
+———— 第二天，新对话 ————
+
+你说：我想学一门编程语言，推荐什么？
+
+AI 自动执行：
+  eiso search bot.db "学编程语言" --json
+  → 搜到: "小明喜欢Python讨厌Java"
+
+AI 回复：你之前说过喜欢 Python，当然继续学 Python！
+```
+
+**不需要写代码，不需要配 API，对 AI 说一段话就行。**
 
 ## 核心原理
 
