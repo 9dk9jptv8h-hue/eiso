@@ -113,55 +113,19 @@ eiso export bot.db --category personal
 
 ## 怎么用？
 
-装好 eiso 之后，**对你的 AI 说下面这段话，它就会自动用起来了**：
+装好之后，在项目目录下**跑一个命令**：
 
----
-
-> 现在你有了一个记忆系统，命令是 `eiso`，数据存在 `bot.db`。
->
-> **每次回复我之前**，先搜索一下之前有没有相关记忆：
-> ```
-> eiso search bot.db "这里写用户当前的问题" --json
-> ```
-> 把搜到的记忆当成背景信息，再回复我。
->
-> **当我告诉你重要的事情时**，记住它：
-> ```
-> eiso remember bot.db 分类 "标题" "内容" --importance 7
-> ```
-> 分类随意写，比如 personal（个人信息）、preference（偏好）、project（项目）。
-> importance 越高越不容易被遗忘，范围 1-10。
->
-> **这次对话结束时**，运行一次维护：
-> ```
-> eiso decay bot.db
-> ```
-
----
-
-**之后每次开新对话**，只需要一句：「跟之前一样用 eiso 记忆系统，bot.db」就够了。
-
-### 实际效果演示
-
-```
-你说：我叫小明，喜欢 Python，讨厌 Java
-
-AI 自动执行：
-  eiso remember bot.db personal "小明喜欢Python讨厌Java" "小明喜欢Python讨厌Java" --importance 8
-AI 回复：记住了小明，Python派！
-
-———— 第二天，新对话 ————
-
-你说：我想学一门编程语言，推荐什么？
-
-AI 自动执行：
-  eiso search bot.db "学编程语言" --json
-  → 搜到: "小明喜欢Python讨厌Java"
-
-AI 回复：你之前说过喜欢 Python，当然继续学 Python！
+```bash
+eiso setup
 ```
 
-**不需要写代码，不需要配 API，对 AI 说一段话就行。**
+它会自动完成两件事：
+1. 创建记忆数据库 `bot.db`
+2. 在 `CLAUDE.md` 中写入记忆系统规则
+
+**然后打开新的 AI 对话就行了。** AI 会自动读取规则，在回复前搜索记忆、在需要时存储记忆、在对话结束时维护记忆。
+
+什么都不用再手动配置。如果已经有过 CLAUDE.md，规则会追加进去不覆盖原有内容。用 `eiso setup --force` 可以强制覆盖。
 
 ## 核心原理
 

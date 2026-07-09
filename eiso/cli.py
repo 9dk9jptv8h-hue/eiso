@@ -60,6 +60,11 @@ def cmd_export(args):
     print(json.dumps(all_memories, indent=2, ensure_ascii=False, default=str))
 
 
+def cmd_setup(args):
+    from eiso.setup import main as setup_main
+    setup_main(force=args.force)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Eiso (永想) — AI Memory Engine CLI')
     sub = parser.add_subparsers(dest='command')
@@ -111,6 +116,10 @@ def main():
     p.add_argument('--category')
     p.add_argument('--limit', type=int, default=10000)
     p.set_defaults(func=cmd_export)
+
+    p = sub.add_parser('setup')
+    p.add_argument('--force', action='store_true', help='强制覆盖已有的 CLAUDE.md 规则')
+    p.set_defaults(func=cmd_setup)
 
     args = parser.parse_args()
     if args.command:
