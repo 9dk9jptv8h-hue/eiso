@@ -111,6 +111,75 @@ eiso stats bot.db
 eiso export bot.db --category personal
 ```
 
+## 装完之后怎么用？—— 三种方式让你的 AI 拥有记忆
+
+永想是一个**被动工具库**——它不会自动运行，需要你的 AI（Claude Code、ChatGPT、本地模型等）主动调用它。下面三种方式，从简单到完整。
+
+### 方式一：每次手动告诉 AI（最简单，适合试用）
+
+在对话开始时直接告诉 AI：
+
+> "你拥有一个记忆系统。收到用户消息后，先用 `python -c '...'` 调 eiso 搜索相关记忆，再回复。对话结束后把重要信息存进去。"
+
+AI 会自己写 Python 代码调用 eiso。缺点是每次新会话都要说一遍。
+
+### 方式二：写在 CLAUDE.md 或系统提示词里（推荐，一劳永逸）
+
+在项目根目录放一个 `CLAUDE.md`（Claude Code 用）或写在 AI 的系统提示词里：
+
+```markdown
+## 记忆系统 (Eisō)
+
+你的记忆数据库在 `./bot.db`。你必须主动使用它。
+
+### 回复前必做
+1. 搜索相关记忆：`eiso search bot.db "<用户的完整问题>" --json`
+2. 将搜索结果作为背景信息，理解用户上下文后再回复
+
+### 存储重要信息
+当用户透露值得记住的信息时，立即存：
+`eiso remember bot.db <分类> "<标题>" "<内容>" --keywords "<关键词>" --importance <1-10>`
+
+分类建议：personal（个人信息）、preference（偏好）、decision（决策）、project（项目）
+
+### 对话结束时
+运行维护：`eiso decay bot.db --days 3`
+```
+
+这样每次新会话，AI 读到这个文件就会自动按规则使用记忆。
+
+### 方式三：Python API 集成（程序员用，最灵活）
+
+直接把 eiso 嵌入你的 AI 应用代码里：
+
+```python
+from eiso import MemoryEngine, extract_from_history
+
+mem = MemoryEngine("bot.db")
+
+# === 你的 AI 回复函数 ===
+def chat(user_message):
+    # 1. 搜记忆
+    memories = mem.semantic_search(user_message, top_n=5)
+    context = "; ".join(m['title'] + ":" + m['content'][:80] for m in memories)
+
+    # 2. 拼 prompt
+    prompt = f"背景记忆: {context}\n\n用户: {user_message}"
+
+    # 3. 调你的 AI（DeepSeek / OpenAI / 本地模型）
+    reply = your_ai.chat(prompt)
+
+    # 4. 自动存重要内容
+    extract_from_history("chat.jsonl", mem)
+
+    return reply
+
+# === 定期维护（每天跑一次） ===
+mem.decay_memories()
+mem.consolidate()
+mem.intelligent_forget()
+```
+
 ## 核心原理
 
 ### 1. 分词（零依赖）
