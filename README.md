@@ -111,48 +111,16 @@ eiso stats bot.db
 eiso export bot.db --category personal
 ```
 
-## 装完之后怎么用？
+## 怎么用？
 
-永想是被动工具——它不会自动运行。你在跟 AI 对话时，**直接告诉 AI 怎么用它就行**：
+安装完后，**直接对 AI 说这段话**：
 
-### 第一次使用时，对 AI 说：
+> 你有记忆系统了，数据库在 bot.db。
+> 回复我之前，先运行 `eiso search bot.db "用户的问题" --json` 搜索相关记忆。
+> 我讲了重要的事，就运行 `eiso remember bot.db 分类 "标题" "内容" --importance 7` 存起来。
+> 对话结束运行 `eiso decay bot.db`。
 
-> 你有一个持久记忆系统 eiso，数据库在 bot.db。规则如下：
->
-> **回复前**：先搜索记忆。运行 `eiso search bot.db "<用户问题>" --json`，把结果作为背景信息参考。
->
-> **记住重要信息**：用户说了值得记的内容时运行 `eiso remember bot.db <分类> "<短标题>" "<完整内容>" --keywords "<关键词>" --importance <1到10>`。
-> 分类用这些：personal(个人信息)、preference(偏好)、decision(决定)、project(项目)、technical(技术)。
->
-> **对话结束时**：运行 `eiso decay bot.db --days 3` 做记忆维护。
-
-### 之后每次对话，只需要一句：
-
-> 记住我们的记忆系统在 bot.db，跟之前一样用。
-
-AI 就会自己调 eiso 搜索和存储了。
-
-### 示例对话
-
-```
-用户: 我叫小明，喜欢Python不喜欢Java，住在北京
-
-AI: （心里想：这个要记住）
-     运行: eiso remember bot.db personal "用户叫小明" "用户叫小明，喜欢Python不喜欢Java，住在北京" --keywords "小明,Python,Java,北京" --importance 8
-     回复: 记住了小明！Python派+北京~
-
-
---- 第二天，新窗口 ---
-
-用户: 你觉得我该学什么编程语言
-
-AI: （心里想：先搜记忆）
-     运行: eiso search bot.db "学什么编程语言" --json
-     结果: [{title: "用户叫小明", semantic_score: 0.72, ...}]
-     回复: 小明你之前就说过喜欢Python啊，继续深入Python吧！
-```
-
-就这么简单~わ。
+就这样。AI 会自己调命令行完成一切。
 
 ## 核心原理
 
